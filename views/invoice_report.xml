@@ -1,10 +1,21 @@
 <odoo>
     <template id="new_invoice_report_template">
+        <t t-if="o and 'company_id' in o">
+            <t t-set="company" t-value="o.company_id"></t>
+        </t>
+        <t t-if="not o or not 'company_id' in o">
+            <t t-set="company" t-value="res_company"></t>
+        </t>
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <div class="page article mt0 o_report_layout_standard">
                     <div class="header">
-                        <img src="/custom_report/static/src/img/header.png" style="max-width: 100%; height: auto;" />
+                        <div class="row mb8">
+                            <div class="col-3 mb4">
+                                <img t-if="company.logo" t-att-src="image_data_uri(company.logo)" style="max-width: auto; height: auto;"/>
+                            </div>
+                        </div>
+                        <!--                        <img src="/custom_report/static/src/img/header.png" style="max-width: 100%; height: auto;" />-->
                         <div style="text-align: right;">
                             <p style="font-weight: bold; font-size: 18px;">Estimate:<br/> <span t-esc="o.invoice_date" /></p>
                         </div>
@@ -48,30 +59,45 @@
                     <p>__________________________________________________________________________________________________________________________________</p>
                     <br/>
                     <br/>
-                    <div class="content">
-                        <h5>Terms of Contract:</h5>
-                        <ul>
-                            <li style="color: purple;">1.Description of Work</li>
-                            <ul>
-                                <li>Contractor will remove the existing shingles from the back of the roof.</li>
-                                <li>Contractor is responsible for proper disposal of the garbage and for cleaning the surrounding premises of the building.</li>
-                                <li>Cleaning all the eaves through.</li>
-                                <li>New Plywood installation, $150 per Sheet (If Applicable).</li>
-                                <li>Contractor will install:</li>
-                                <ul>
-                                    <li>GAF Timberline HD shingles.</li>
-                                    <li>GAF Seal-A-Ridge Capping.</li>
-                                    <li>Ice and water protector.</li>
-                                    <li>Synthetic Underlayment.</li>
-                                    <li>Metal Dripedge.</li>
-                                    <li>New vents (weather pro50).</li>
-                                    <li>Mechanical Exhaust vents.</li>
-                                    <li>Plumbing stack flashing.</li>
-                                </ul>
-                            </ul>
-                            <br/>
-                            <br/>
+                    <h5>Terms of Contract:</h5>
 
+                    <div class="content">
+                        <ul>
+                            <li style="color: purple;">1. Description of Work</li>
+                            <ul>
+                                <table style="width: 100%;" >
+                                    <tbody>
+                                        <!--                                        <tr t-foreach="o.invoice_line_ids" t-as="l">-->
+                                        <t t-set="lines" t-value="o.invoice_line_ids.sorted(key=lambda l: (-l.sequence, l.date, l.move_name, -l.id), reverse=True)"/>
+
+                                        <t t-foreach="lines" t-as="line">
+
+                                            <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
+                                                <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
+                                                    <td name="account_invoice_line_name">
+                                                        <li><span t-field="line.name" t-options="{'widget': 'text'}"/></li>
+                                                    </td>
+                                                </t>
+                                                <t t-if="line.display_type == 'line_section'">
+                                                    <td colspan="99">
+                                                        <ul> <span t-field="line.name" t-options="{'widget': 'text'}"/></ul>
+                                                    </td>
+                                                    <t t-set="current_section" t-value="line"/>
+                                                    <t t-set="current_subtotal" t-value="0"/>
+                                                </t>
+                                            </tr>
+
+
+                                            <!--                                                                                    <tr>-->
+
+                                            <!--                                                &lt;!&ndash;                                            <li><td><span t-esc="l.product_id.name"/></td></li>&ndash;&gt;-->
+                                            <!--                                                <li><span t-esc="l.product_id.name"/></li>-->
+                                            <!--                                            </tr>-->
+                                            <!--                                        </tr>-->
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </ul>
                             <li  style="color: purple;" >2. Warranty</li>
                             <p>The Contractor shall correct, at its’ own expense, any defects in the Work due to faulty
                                 materials and/or workmanship pursuant to this Contract for a period of _10__ year(s) from
@@ -103,31 +129,7 @@
                         </div>
                         <br/>
                         <br/>
-                        <table class="table table-bordered" style="width: 100%;" >
-                            <thead>
-                                <tr>
-                                    <th>Description</th>
-                                    <th>Quantity</th>
-                                    <th>Unit Price</th>
-                                    <th>Taxes</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr t-foreach="o.invoice_line_ids" t-as="l">
-                                    <tr>
-                                        <td><span t-esc="l.product_id.name"/></td>
-                                        <td><span t-esc="l.quantity"/></td>
-                                        <td><span t-esc="l.price_unit"/></td>
-                                        <td><span t-esc="l.tax_ids.name"/></td>
-                                        <td><span t-esc="l.price_subtotal"/></td>
-                                    </tr>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <br/>
-                        <br/>
-                        <br/>
+
                         <div>
                             <div class="col-6 float-right">
                                 <table class="table table-condensed">
@@ -163,6 +165,10 @@
                                 </table>
                             </div>
                         </div>
+
+                        <br/>
+                        <br/>
+                        <br/>
                         <br/>
                         <br/>
                         <br/>
